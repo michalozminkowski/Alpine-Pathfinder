@@ -24,3 +24,13 @@ namespace Core
 
 	void deleteVAO(GLuint VAO);
 }
+
+namespace obj {
+	struct Model;
+}
+
+namespace Core
+{
+	GLuint initVAOForModel(const obj::Model& model);
+	void drawVAOIndexedUShort(GLuint VAO, int numIndices);
+}

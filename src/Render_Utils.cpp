@@ -1,4 +1,5 @@
 #include "Render_Utils.h"
+#include "objload.h"
 
 #include <iostream>
 
@@ -73,3 +74,60 @@ GLuint Core::initVAOIndexed(const float* vertexArray, const unsigned int* indexA
     glBindVertexArray(0);
     return VAO;
 }
+
+GLuint Core::initVAOForModel(const obj::Model& model) {
+    GLuint VAO, VBO_pos, VBO_normal, VBO_tex, EBO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    // Positions (Location 0)
+    if (!model.vertex.empty()) {
+        glGenBuffers(1, &VBO_pos);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
+        glBufferData(GL_ARRAY_BUFFER, model.vertex.size() * sizeof(float), model.vertex.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+    }
+
+    // Normals (Location 1)
+    if (!model.normal.empty()) {
+        glGenBuffers(1, &VBO_normal);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO_normal);
+        glBufferData(GL_ARRAY_BUFFER, model.normal.size() * sizeof(float), model.normal.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+    }
+
+    // Texture Coordinates (Location 2)
+    if (!model.texCoord.empty()) {
+        glGenBuffers(1, &VBO_tex);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO_tex);
+        glBufferData(GL_ARRAY_BUFFER, model.texCoord.size() * sizeof(float), model.texCoord.data(), GL_STATIC_DRAW);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(2);
+    }
+
+    // Index buffer (EBO)
+    if (!model.faces.empty()) {
+        glGenBuffers(1, &EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        const auto& indices = model.faces.begin()->second;
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), indices.data(), GL_STATIC_DRAW);
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+    return VAO;
+}
+
+void Core::drawVAOIndexedUShort(GLuint VAO, int numIndices) {
+    glBindVertexArray(VAO);
+    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_SHORT, 0);
+    glBindVertexArray(0);
+}
+
+void Core::deleteVAO(GLuint VAO) {
+    glDeleteVertexArrays(1, &VAO);
+}
+
+

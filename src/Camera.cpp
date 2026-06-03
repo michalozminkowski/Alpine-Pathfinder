@@ -2,7 +2,7 @@
 
 glm::mat4 Core::createPerspectiveMatrix(float zNear, float zFar, float frustumScale)
 {
-	glm::mat4 perspective;
+	glm::mat4 perspective(0.0f);
     perspective[0][0] = 1.f;
 	perspective[1][1] = frustumScale;
 	perspective[2][2] = (zFar + zNear) / (zNear - zFar);
@@ -19,12 +19,12 @@ glm::mat4 Core::createViewMatrix( glm::vec3 position, glm::vec3 forward, glm::ve
 
 	// Trzeba pamietac o minusie przy ustawianiu osi Z kamery.
 	// Wynika to z tego, ze standardowa macierz perspektywiczna zaklada, ze "z przodu" jest ujemna (a nie dodatnia) czesc osi Z.
-	glm::mat4 cameraRotation;
+	glm::mat4 cameraRotation(1.0f);
 	cameraRotation[0][0] = side.x; cameraRotation[1][0] = side.y; cameraRotation[2][0] = side.z;
 	cameraRotation[0][1] = up.x; cameraRotation[1][1] = up.y; cameraRotation[2][1] = up.z;
 	cameraRotation[0][2] = -forward.x; cameraRotation[1][2] = -forward.y; cameraRotation[2][2] = -forward.z;
 
-	glm::mat4 cameraTranslation;
+	glm::mat4 cameraTranslation(1.0f);
 	cameraTranslation[3] = glm::vec4(-position, 1.0f);
 
 	return cameraRotation * cameraTranslation;
