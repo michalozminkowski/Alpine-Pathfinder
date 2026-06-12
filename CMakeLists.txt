@@ -24,13 +24,15 @@ file(GLOB SOURCES
     "src/*.cpp" 
     "src/*.h"
     "src/*.hpp"
+    "src/imgui/*.cpp"
+    "src/imgui/*.h"
 )
 
 # Add executable
 add_executable(${EXECUTABLE_NAME} ${SOURCES})
 
 # Include directories
-target_include_directories(${EXECUTABLE_NAME} PRIVATE "src")
+target_include_directories(${EXECUTABLE_NAME} PRIVATE "src" "src/imgui")
 
 # Link libraries
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE
