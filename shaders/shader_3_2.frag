@@ -99,8 +99,8 @@ void main()
     // Snow calculation
     // As snowLevel increases from 0.0 to 5.0, snow can stick to steeper and steeper slopes
     // N.y represents the upward normal (1.0 = flat ground, 0.0 = vertical wall)
-    float minSlope = max(0.8 - (snowLevel * 0.15), 0.1); 
-    float maxSlope = max(0.95 - (snowLevel * 0.1), 0.2); 
+    float minSlope = max(0.8 - (0.003 * snowLevel * snowLevel), 0.5); 
+    float maxSlope = max(0.95 - (0.0015 * snowLevel * snowLevel), 0.8); 
     
     // Activate the noise function! We use FBM noise to perturb the slope calculation.
     // This breaks up the perfectly straight snow lines and makes them look organic.

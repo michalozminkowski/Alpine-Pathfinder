@@ -41,8 +41,8 @@ private:
 
 public:
   // Grid details
-  int gridWidth = 200;
-  int gridHeight = 200;
+  int gridWidth = 2000;
+  int gridHeight = 2000;
   float minX, minZ, maxX, maxZ;
   float cellSizeX, cellSizeZ;
   std::vector<GridCell> heightGrid;
@@ -51,7 +51,7 @@ public:
   GLuint shader;
 
 public:
-  int activeParticleCount = 50000;
+  int activeParticleCount = 20000;
 
 private:
   // Physics parameters

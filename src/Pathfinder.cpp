@@ -150,8 +150,8 @@ std::vector<glm::vec3> Pathfinder::findPathAStar(int startIdx, int targetIdx,
 
         // Snow penalty
         float ny = sim->heightGrid[neighbor].normal.y;
-        float minSlope = std::max(0.8f - (snowLevel * 0.15f), 0.1f);
-        float maxSlope = std::max(0.95f - (snowLevel * 0.1f), 0.2f);
+        float minSlope = std::max(0.8f - (0.003f * snowLevel * snowLevel), 0.5f);
+        float maxSlope = std::max(0.95f - (0.0015f * snowLevel * snowLevel), 0.8f);
 
         float slopeFactor = 0.0f;
         if (ny <= minSlope)
@@ -215,14 +215,15 @@ void Pathfinder::generatePath(int cornerIdx, float snowLevel) {
     newPath.distanceKm = 0.0f;
     newPath.elevationGainM = 0.0f;
     for (size_t i = 1; i < pathVerts.size(); ++i) {
-      newPath.distanceKm += glm::distance(pathVerts[i], pathVerts[i-1]);
-      float dy = pathVerts[i].y - pathVerts[i-1].y;
+      newPath.distanceKm += glm::distance(pathVerts[i], pathVerts[i - 1]);
+      float dy = pathVerts[i].y - pathVerts[i - 1].y;
       if (dy > 0.0f) {
         newPath.elevationGainM += dy;
       }
     }
-    
-    // Konwersja z jednostek świata na rzeczywiste wartości (1 jednostka ~ 100 metrów)
+
+    // Konwersja z jednostek świata na rzeczywiste wartości (1 jednostka ~ 100
+    // metrów)
     newPath.distanceKm *= 0.1f;
     newPath.elevationGainM *= 100.0f;
 
