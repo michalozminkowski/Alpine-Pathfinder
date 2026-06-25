@@ -76,7 +76,35 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
 
-  float cameraSpeed = static_cast<float>(0.5 * deltaTime);
+  static float lastKeyPressTime = 0.0f;
+  static bool fastMode = false;
+
+  int keys[] = { GLFW_KEY_W, GLFW_KEY_A, GLFW_KEY_S, GLFW_KEY_D, GLFW_KEY_Q, GLFW_KEY_E };
+  static bool wasPressed[6] = {false};
+  bool anyJustPressed = false;
+  bool anyPressed = false;
+
+  for(int i = 0; i < 6; i++) {
+    bool isPressed = glfwGetKey(window, keys[i]) == GLFW_PRESS;
+    if(isPressed && !wasPressed[i]) anyJustPressed = true;
+    if(isPressed) anyPressed = true;
+    wasPressed[i] = isPressed;
+  }
+
+  if (anyJustPressed) {
+    float currentTime = static_cast<float>(glfwGetTime());
+    if (currentTime - lastKeyPressTime < 0.4f) {
+      fastMode = true;
+    }
+    lastKeyPressTime = currentTime;
+  }
+  
+  if (!anyPressed) {
+    fastMode = false;
+  }
+
+  float speedMultiplier = fastMode ? 5.0f : 1.0f;
+  float cameraSpeed = static_cast<float>(0.5 * speedMultiplier * deltaTime);
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     cameraPos += cameraSpeed * cameraFront;
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
