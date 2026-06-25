@@ -63,7 +63,16 @@ vec3 perturbNormal(vec3 baseNormal, vec3 p, vec2 uv) {
     vec3 B = q1perp * st0.y + q0perp * st1.y;
 
     float det = max(dot(T, T), dot(B, B));
-    float scale = (det == 0.0) ? 0.0 : inversesqrt(det);
+    
+    // Zabezpieczenie przed ekstremalnym rozciągnięciem UV na klifach
+    if (det < 1e-7) {
+        return normalize(baseNormal);
+    }
+    
+    float scale = inversesqrt(det);
+    // Ograniczamy maksymalne skalowanie, co sprawia, że na bardzo rozciągniętych 
+    // trójkątach efekt normal mapy płynnie zanika na rzecz bazowego kształtu
+    scale = min(scale, 10.0);
 
     return normalize((T * tangentNormal.x + B * tangentNormal.y) * scale + N * tangentNormal.z);
 }
