@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 #include <map>
 #include <set>
 #include <vector>
+#include <cmath>
 
 namespace obj {
 
@@ -40,7 +41,7 @@ struct Model {
     std::vector<float> texCoord; //< 2 * N entries
     std::vector<float> normal; //< 3 * N entries
     
-    std::map<std::string, std::vector<unsigned short> > faces; //< assume triangels and uniform indexing
+    std::map<std::string, std::vector<unsigned int> > faces; //< assume triangels and uniform indexing
 };
 
 struct ObjModel {
@@ -221,13 +222,69 @@ Model convertToModel( const ObjModel & obj ) {
     for(std::map<std::string, ObjModel::FaceList>::const_iterator g = obj.faces.begin(); g != obj.faces.end(); ++g){
         const std::string & name = g->first;
         const ObjModel::FaceList & fl = g->second;
-        std::vector<unsigned short> & v = model.faces[g->first];
-        v.reserve(fl.first.size());
-        for(std::vector<ObjModel::FaceVertex>::const_iterator f = fl.first.begin(); f != fl.first.end(); ++f){
-            const unsigned short index = std::distance(unique.begin(), std::lower_bound(unique.begin(), unique.end(), *f));
-            v.push_back(index);
+        std::vector<unsigned int> & v = model.faces[g->first];
+        int start_idx = 0;
+        for (size_t i = 0; i < fl.second.size(); ++i) {
+            int end_idx = fl.second[i];
+            int face_size = end_idx - start_idx;
+            
+            if (face_size >= 3) {
+                const ObjModel::FaceVertex& v0 = fl.first[start_idx];
+                unsigned int idx0 = std::distance(unique.begin(), std::lower_bound(unique.begin(), unique.end(), v0));
+                
+                for (int j = 1; j < face_size - 1; ++j) {
+                    const ObjModel::FaceVertex& v1 = fl.first[start_idx + j];
+                    const ObjModel::FaceVertex& v2 = fl.first[start_idx + j + 1];
+                    
+                    unsigned int idx1 = std::distance(unique.begin(), std::lower_bound(unique.begin(), unique.end(), v1));
+                    unsigned int idx2 = std::distance(unique.begin(), std::lower_bound(unique.begin(), unique.end(), v2));
+                    
+                    v.push_back(idx0);
+                    v.push_back(idx1);
+                    v.push_back(idx2);
+                }
+            }
+            start_idx = end_idx;
         }
     }
+    
+    // Generate normals if they are missing
+    if (model.normal.empty()) {
+        model.normal.resize(model.vertex.size(), 0.0f);
+        for(std::map<std::string, std::vector<unsigned int> >::const_iterator g = model.faces.begin(); g != model.faces.end(); ++g){
+            const std::vector<unsigned int> & indices = g->second;
+            for (size_t i = 0; i < indices.size(); i += 3) {
+                unsigned int i0 = indices[i];
+                unsigned int i1 = indices[i+1];
+                unsigned int i2 = indices[i+2];
+                
+                float v0x = model.vertex[i0*3], v0y = model.vertex[i0*3+1], v0z = model.vertex[i0*3+2];
+                float v1x = model.vertex[i1*3], v1y = model.vertex[i1*3+1], v1z = model.vertex[i1*3+2];
+                float v2x = model.vertex[i2*3], v2y = model.vertex[i2*3+1], v2z = model.vertex[i2*3+2];
+                
+                float ux = v1x - v0x, uy = v1y - v0y, uz = v1z - v0z;
+                float wx = v2x - v0x, wy = v2y - v0y, wz = v2z - v0z;
+                
+                float nx = uy * wz - uz * wy;
+                float ny = uz * wx - ux * wz;
+                float nz = ux * wy - uy * wx;
+                
+                model.normal[i0*3] += nx; model.normal[i0*3+1] += ny; model.normal[i0*3+2] += nz;
+                model.normal[i1*3] += nx; model.normal[i1*3+1] += ny; model.normal[i1*3+2] += nz;
+                model.normal[i2*3] += nx; model.normal[i2*3+1] += ny; model.normal[i2*3+2] += nz;
+            }
+        }
+        for (size_t i = 0; i < model.normal.size(); i += 3) {
+            float nx = model.normal[i], ny = model.normal[i+1], nz = model.normal[i+2];
+            float len = std::sqrt(nx*nx + ny*ny + nz*nz);
+            if (len > 0.000001f) {
+                model.normal[i] = nx / len;
+                model.normal[i+1] = ny / len;
+                model.normal[i+2] = nz / len;
+            }
+        }
+    }
+
     return model;
 }
 
@@ -276,7 +333,7 @@ std::ostream & operator<<( std::ostream & out, const Model & m ){
     }
     if(!m.faces.empty()){
         out << "faces\t";
-        for(std::map<std::string, std::vector<unsigned short> >::const_iterator g = m.faces.begin(); g != m.faces.end(); ++g){
+        for(std::map<std::string, std::vector<unsigned int> >::const_iterator g = m.faces.begin(); g != m.faces.end(); ++g){
             out << g->first << " ";
         }
         out << "\n";

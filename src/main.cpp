@@ -15,11 +15,11 @@
 #include "Snow.h"
 #include "objload.h"
 
+#include "Pathfinder.h"
+#include "Snow.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "Pathfinder.h"
-#include "Snow.h"
 
 // Zmienne globalne
 GLuint program;
@@ -27,9 +27,10 @@ GLuint snowProgram;
 GLuint vaoMatterhorn;
 int numIndicesMatterhorn = 0;
 GLuint textureMatterhorn;
+GLuint textureNormalMap;
 
-SnowSimulation* snowSim = nullptr;
-Pathfinder* pathfinder = nullptr;
+SnowSimulation *snowSim = nullptr;
+Pathfinder *pathfinder = nullptr;
 GLuint pathProgram;
 
 float globalSnowLevel = 0.0f;
@@ -133,8 +134,8 @@ void init(GLFWwindow *window) {
 
   program = shaderLoader.CreateProgram(vertPathBuf.data(), fragPathBuf.data());
 
-  // Wczytanie modelu Matterhorn
-  std::string modelPath = get_path("models/matterhorn.obj");
+  // Wczytanie modelu landscape
+  std::string modelPath = get_path("models/landscape_mid.obj");
   std::cout << "Loading model: " << modelPath << std::endl;
   obj::Model model = obj::loadModelFromFile(modelPath);
 
@@ -149,10 +150,10 @@ void init(GLFWwindow *window) {
     // Initialize Grid Data for Pathfinding
     snowSim = new SnowSimulation(0); // We only need the grid, not particles
     glm::mat4 modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(0.1f, 0.1f, 0.1f));
-    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -1.7f, 0.0f));
+    modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -20.0f, 0.0f));
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(30.0f, 30.0f, 30.0f));
     snowSim->initGridFromModel(model, modelMatrix);
-    
+
     // Initialize Pathfinder
     pathfinder = new Pathfinder(snowSim);
     std::string pathVertPath = get_path("shaders/path.vert");
@@ -161,19 +162,18 @@ void init(GLFWwindow *window) {
     pathVertBuf.push_back('\0');
     std::vector<char> pathFragBuf(pathFragPath.begin(), pathFragPath.end());
     pathFragBuf.push_back('\0');
-    pathProgram = shaderLoader.CreateProgram(pathVertBuf.data(), pathFragBuf.data());
-    
+    pathProgram =
+        shaderLoader.CreateProgram(pathVertBuf.data(), pathFragBuf.data());
+
     pathfinder->initRendering(pathProgram);
   }
 
   // Wczytywanie tekstury
-  std::string texPath =
-      get_path("models/matterhorn-disneyland-pbr-model-low-poly/textures/"
-               "M_low_poly_phong1SG_BaseColor.png");
+  std::string texPath = get_path("models/landscape_texture.jpg");
   glGenTextures(1, &textureMatterhorn);
   glBindTexture(GL_TEXTURE_2D, textureMatterhorn);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                   GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -198,6 +198,28 @@ void init(GLFWwindow *window) {
   }
   stbi_image_free(data);
 
+  // Wczytywanie mapy normalnych (Normal Map)
+  std::string normalPath = get_path("models/landscape_normal.jpg");
+  glGenTextures(1, &textureNormalMap);
+  glBindTexture(GL_TEXTURE_2D, textureNormalMap);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  unsigned char *normalData = stbi_load(normalPath.c_str(), &width, &height, &nrChannels, 0);
+  if (normalData) {
+    GLenum format = GL_RGB;
+    if (nrChannels == 1) format = GL_RED;
+    else if (nrChannels == 3) format = GL_RGB;
+    else if (nrChannels == 4) format = GL_RGBA;
+    
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, normalData);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  } else {
+    std::cout << "Failed to load normal map" << std::endl;
+  }
+  stbi_image_free(normalData);
+
   // Inicjalizacja ImGui
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -220,20 +242,21 @@ void renderScene(GLFWwindow *window) {
 
   ImGui::Begin("Snow Control");
   ImGui::SliderFloat("Snow Amount", &globalSnowLevel, 0.0f, 10.0f);
-  
+
   ImGui::Separator();
   ImGui::Text("Pathfinding Options");
-  const char* corners[] = { "North-West", "North-East", "South-West", "South-East" };
+  const char *corners[] = {"North-West", "North-East", "South-West",
+                           "South-East"};
   ImGui::Combo("Start Corner", &selectedCorner, corners, 4);
-  
+
   if (ImGui::Button("Generate Route") && pathfinder) {
-      pathfinder->generatePath(selectedCorner, globalSnowLevel);
+    pathfinder->generatePath(selectedCorner, globalSnowLevel);
   }
   ImGui::SameLine();
   if (ImGui::Button("Clear Routes") && pathfinder) {
-      pathfinder->clearPaths();
+    pathfinder->clearPaths();
   }
-  
+
   ImGui::End();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -241,9 +264,15 @@ void renderScene(GLFWwindow *window) {
   if (numIndicesMatterhorn > 0) {
     glUseProgram(program);
 
+    // Bind main texture to unit 0
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureMatterhorn);
     glUniform1i(glGetUniformLocation(program, "textureSampler"), 0);
+
+    // Bind normal map to unit 1
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, textureNormalMap);
+    glUniform1i(glGetUniformLocation(program, "normalSampler"), 1);
 
     glUniform1f(glGetUniformLocation(program, "snowLevel"), globalSnowLevel);
 
@@ -252,18 +281,18 @@ void renderScene(GLFWwindow *window) {
 
     // Macierz modelu - dopasowanie skali i pozycji dla nowego modelu
     glm::mat4 model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
-    model = glm::translate(model, glm::vec3(0.0f, -1.7f, 0.0f));
+    model = glm::translate(model, glm::vec3(0.0f, -6.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(30.0f, 30.0f, 30.0f));
 
     glm::mat4 transformation = projection * view * model;
 
     GLuint transLoc = glGetUniformLocation(program, "transformation");
     glUniformMatrix4fv(transLoc, 1, GL_FALSE, &transformation[0][0]);
 
-    Core::drawVAOIndexedUShort(vaoMatterhorn, numIndicesMatterhorn);
-    
+    Core::drawVAOIndexedUInt(vaoMatterhorn, numIndicesMatterhorn);
+
     if (pathfinder) {
-        pathfinder->render(view, projection);
+      pathfinder->render(view, projection);
     }
   }
 
@@ -288,12 +317,12 @@ void shutdown(GLFWwindow *window) {
   ImGui::DestroyContext();
 
   if (pathfinder) {
-      delete pathfinder;
-      pathfinder = nullptr;
+    delete pathfinder;
+    pathfinder = nullptr;
   }
   if (snowSim) {
-      delete snowSim;
-      snowSim = nullptr;
+    delete snowSim;
+    snowSim = nullptr;
   }
 
   // Czyszczenie zasobów

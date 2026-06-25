@@ -112,7 +112,7 @@ GLuint Core::initVAOForModel(const obj::Model& model) {
         glGenBuffers(1, &EBO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         const auto& indices = model.faces.begin()->second;
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), indices.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -120,9 +120,9 @@ GLuint Core::initVAOForModel(const obj::Model& model) {
     return VAO;
 }
 
-void Core::drawVAOIndexedUShort(GLuint VAO, int numIndices) {
+void Core::drawVAOIndexedUInt(GLuint VAO, int numIndices) {
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_SHORT, 0);
+    glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
 }
 

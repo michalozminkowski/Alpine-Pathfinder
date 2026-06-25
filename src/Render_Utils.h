@@ -32,5 +32,5 @@ namespace obj {
 namespace Core
 {
 	GLuint initVAOForModel(const obj::Model& model);
-	void drawVAOIndexedUShort(GLuint VAO, int numIndices);
+	void drawVAOIndexedUInt(GLuint VAO, int numIndices);
 }
