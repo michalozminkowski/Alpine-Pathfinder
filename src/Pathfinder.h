@@ -27,6 +27,8 @@ private:
         glm::vec4 color;
         int vertexOffset;
         int vertexCount;
+        float distanceKm;
+        float elevationGainM;
     };
 
     SnowSimulation* sim;
@@ -34,6 +36,10 @@ private:
     std::vector<PathData> paths;
     GLuint shader;
     
+public:
+    const std::vector<PathData>& getPaths() const { return paths; }
+
+private:
     int findSummitIndex();
     std::vector<glm::vec3> findPathAStar(int startIdx, int targetIdx, float snowLevel);
     int getValidCorner(int cornerIdx);

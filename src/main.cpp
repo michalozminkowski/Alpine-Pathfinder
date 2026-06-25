@@ -285,6 +285,19 @@ void renderScene(GLFWwindow *window) {
     pathfinder->clearPaths();
   }
 
+  if (pathfinder) {
+    const auto& paths = pathfinder->getPaths();
+    if (!paths.empty()) {
+        ImGui::Separator();
+        ImGui::Text("Generated Routes Info:");
+        for (size_t i = 0; i < paths.size(); ++i) {
+            const auto& p = paths[i];
+            ImVec4 col(p.color.r, p.color.g, p.color.b, p.color.a);
+            ImGui::TextColored(col, "Route %zu: %.2f km, %.0f m gain", i + 1, p.distanceKm, p.elevationGainM);
+        }
+    }
+  }
+
   ImGui::End();
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

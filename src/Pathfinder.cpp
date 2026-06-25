@@ -212,6 +212,20 @@ void Pathfinder::generatePath(int cornerIdx, float snowLevel) {
     PathData newPath;
     newPath.vertices = pathVerts;
 
+    newPath.distanceKm = 0.0f;
+    newPath.elevationGainM = 0.0f;
+    for (size_t i = 1; i < pathVerts.size(); ++i) {
+      newPath.distanceKm += glm::distance(pathVerts[i], pathVerts[i-1]);
+      float dy = pathVerts[i].y - pathVerts[i-1].y;
+      if (dy > 0.0f) {
+        newPath.elevationGainM += dy;
+      }
+    }
+    
+    // Konwersja z jednostek świata na rzeczywiste wartości (1 jednostka ~ 100 metrów)
+    newPath.distanceKm *= 0.1f;
+    newPath.elevationGainM *= 100.0f;
+
     if (paths.size() >= 5) {
       paths.erase(paths.begin()); // Remove oldest
     }
