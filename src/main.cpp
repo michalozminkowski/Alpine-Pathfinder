@@ -363,8 +363,8 @@ void renderScene(GLFWwindow *window) {
 
     glUniform1f(glGetUniformLocation(program, "snowLevel"), globalSnowLevel);
 
-    glm::mat4 projection = Core::createPerspectiveMatrix(0.1f, 100.0f, 1.0f);
-    glm::mat4 view = Core::createViewMatrix(cameraPos, cameraFront, cameraUp);
+    glm::mat4 projection = glm::perspective(glm::radians(60.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 
     // Macierz modelu - dopasowanie skali i pozycji dla nowego modelu
     glm::mat4 model = glm::mat4(1.0f);

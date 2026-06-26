@@ -5,8 +5,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 SnowSimulation::SnowSimulation(int numParticles) {
+}
+
+void SnowSimulation::initParticles(int numParticles) {
   particles.resize(numParticles);
   renderData.resize(numParticles);
+  activeParticleCount = numParticles;
 
   // Initial spawn
   for (auto &p : particles) {
