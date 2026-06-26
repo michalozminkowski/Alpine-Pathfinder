@@ -36,10 +36,6 @@ GLuint pathProgram;
 float globalSnowLevel = 0.0f;
 int selectedCorner = 0;
 
-// Snow simulation settings
-bool enableSnowSimulation = false;
-int maxSnowParticles = 20000;
-
 // Kamera
 glm::vec3 cameraPos = glm::vec3(0.0f, 1.2f, 2.5f);
 glm::vec3 cameraFront = glm::normalize(glm::vec3(0.0f, 0.2f, 0.0f) - cameraPos);
@@ -186,18 +182,6 @@ void init(GLFWwindow *window) {
     modelMatrix = glm::scale(modelMatrix, glm::vec3(30.0f, 30.0f, 30.0f));
     snowSim->initGridFromModel(model, modelMatrix);
 
-    // Wczytanie shaderów dla symulacji śniegu
-    std::string snowVertPath = get_path("shaders/snow.vert");
-    std::string snowFragPath = get_path("shaders/snow.frag");
-    std::vector<char> snowVertBuf(snowVertPath.begin(), snowVertPath.end());
-    snowVertBuf.push_back('\0');
-    std::vector<char> snowFragBuf(snowFragPath.begin(), snowFragPath.end());
-    snowFragBuf.push_back('\0');
-    snowProgram = shaderLoader.CreateProgram(snowVertBuf.data(), snowFragBuf.data());
-
-    snowSim->initParticles(maxSnowParticles);
-    snowSim->initRendering(snowProgram);
-
     // Initialize Pathfinder
     pathfinder = new Pathfinder(snowSim);
     std::string pathVertPath = get_path("shaders/path.vert");
@@ -288,23 +272,6 @@ void renderScene(GLFWwindow *window) {
   ImGui::SliderFloat("Snow Amount", &globalSnowLevel, 0.0f, 10.0f);
 
   ImGui::Separator();
-  ImGui::Text("Snow Falling Animation");
-  if (enableSnowSimulation) {
-      if (ImGui::Button("Pause Animation")) {
-          enableSnowSimulation = false;
-      }
-  } else {
-      if (ImGui::Button("Play Animation")) {
-          enableSnowSimulation = true;
-      }
-  }
-  if (snowSim) {
-      ImGui::SliderInt("Particles Count", &snowSim->activeParticleCount, 0, maxSnowParticles);
-      ImGui::SliderFloat("Gravity", &snowSim->gravity, 0.0f, 5.0f);
-      ImGui::SliderFloat("Wind Strength", &snowSim->windStrength, 0.0f, 5.0f);
-  }
-
-  ImGui::Separator();
   ImGui::Text("Pathfinding Options");
   const char *corners[] = {"North-West", "North-East", "South-West",
                            "South-East"};
@@ -332,10 +299,6 @@ void renderScene(GLFWwindow *window) {
   }
 
   ImGui::End();
-
-  if (enableSnowSimulation && snowSim) {
-    snowSim->update(deltaTime, currentFrame);
-  }
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -371,10 +334,6 @@ void renderScene(GLFWwindow *window) {
 
     if (pathfinder) {
       pathfinder->render(view, projection);
-    }
-
-    if (enableSnowSimulation && snowSim) {
-      snowSim->render(view, projection);
     }
   }
 

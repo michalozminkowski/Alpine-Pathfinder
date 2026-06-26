@@ -11,6 +11,6 @@ void main() {
     
     // Scale point size based on distance
     float dist = length(viewPos.xyz);
-    // Larger size for visibility
-    gl_PointSize = max(120.0 / dist, 3.0);
+    // Add small minimum size and decay with distance
+    gl_PointSize = max(3.0 / dist, 0.5);
 }
