@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <random>
+#include <glm/gtc/matrix_transform.hpp>
 
 SnowSimulation::SnowSimulation(int numParticles) {
   particles.resize(numParticles);
@@ -217,6 +218,7 @@ void SnowSimulation::render(const glm::mat4 &view,
   glUseProgram(shader);
 
   glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, glm::vec3(0.0f, 14.0f, 0.0f));
   glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE,
                      &model[0][0]);
   glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE,
