@@ -35,8 +35,6 @@ make
 
 ## Galeria
 
-![Widok na Matterhorn z symulacją pokrywy śnieżnej i oświetleniem](photos/photo1.png)
-*Rys 1. Prezentacja wyrenderowanego szczytu górskiego z nałożonym proceduralnym śniegiem oraz mapowaniem normalnych.*
+(photos/photo1.png)
 
-![Wizualizacja wyznaczonej trasy wspinaczkowej](photos/photo2.png)
-*Rys 2. Działanie algorytmu Pathfindingu wyznaczającego bezpieczną trasę na szczyt z ominięciem stromych, zaśnieżonych obszarów.*
+(photos/photo2.png)
