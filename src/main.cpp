@@ -33,6 +33,8 @@ Pathfinder *pathfinder = nullptr;
 GLuint pathProgram;
 
 float globalSnowLevel = 0.0f;
+float globalSnowNoiseScale = 150.0f;
+float globalSnowDistortion = 0.2f;
 int selectedCorner = 0;
 
 // Snow simulation settings
@@ -294,6 +296,8 @@ void renderScene(GLFWwindow *window) {
 
   ImGui::Begin("Snow Control");
   ImGui::SliderFloat("Snow Amount", &globalSnowLevel, 0.0f, 10.0f);
+  ImGui::SliderFloat("Snow Noise Scale", &globalSnowNoiseScale, 10.0f, 500.0f);
+  ImGui::SliderFloat("Snow Distortion", &globalSnowDistortion, 0.0f, 1.0f);
 
   ImGui::Separator();
   ImGui::Text("Snow Falling Animation");
@@ -362,6 +366,8 @@ void renderScene(GLFWwindow *window) {
     glUniform1i(glGetUniformLocation(program, "normalSampler"), 1);
 
     glUniform1f(glGetUniformLocation(program, "snowLevel"), globalSnowLevel);
+    glUniform1f(glGetUniformLocation(program, "snowNoiseScale"), globalSnowNoiseScale);
+    glUniform1f(glGetUniformLocation(program, "snowDistortion"), globalSnowDistortion);
 
     glm::mat4 projection = glm::perspective(glm::radians(60.0f), 800.0f / 600.0f, 0.1f, 100.0f);
     glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);

@@ -4,6 +4,8 @@ uniform vec3 objectColor;
 uniform sampler2D textureSampler;
 uniform sampler2D normalSampler;
 uniform float snowLevel; // 0.0 to 1.0
+uniform float snowNoiseScale;
+uniform float snowDistortion;
 in vec3 normal;
 in vec2 texCoord;
 in vec3 fragPos;
@@ -99,8 +101,8 @@ void main()
     float maxSlope = max(0.95 - (0.0015 * snowLevel * snowLevel), 0.8); 
     
     // Funkcja szumu
-    float noiseVal = fbm(texCoord * 150.0); 
-    float perturbedNy = N.y + (noiseVal - 0.5) * 0.2; // Dodanie losowego przesunięcia (jitter) do kąta powierzchni
+    float noiseVal = fbm(texCoord * snowNoiseScale); 
+    float perturbedNy = N.y + (noiseVal - 0.5) * snowDistortion;
     
     float slopeFactor = smoothstep(minSlope, maxSlope, perturbedNy);
     float snowCoverage = clamp(slopeFactor * snowLevel, 0.0, 1.0);

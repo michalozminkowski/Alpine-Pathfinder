@@ -30,7 +30,7 @@ SnowSimulation::~SnowSimulation() {
 void SnowSimulation::respawn(Snowflake &p) {
   float x = minX + ((float)rand() / RAND_MAX) * (maxX - minX);
   float z = minZ + ((float)rand() / RAND_MAX) * (maxZ - minZ);
-  float y = 5.0f + ((float)rand() / RAND_MAX) * 5.0f; // spawn above mountain
+  float y = 15.0f + ((float)rand() / RAND_MAX) * 15.0f; // spawn much higher above mountain
 
   p.position = glm::vec3(x, y, z);
   p.velocity = glm::vec3(0, 0, 0);
@@ -194,7 +194,7 @@ void SnowSimulation::update(float dt, float time) {
       }
     }
 
-    if (p.life <= 0.0f || p.position.y < -5.0f) {
+    if (p.life <= 0.0f || p.position.y < -25.0f) {
       respawn(p);
     }
   }
