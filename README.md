@@ -35,6 +35,6 @@ make
 
 ## Galeria
 
-(photos/photo1.png)
+![Symulacja pokrywy śnieżnej](photos/photo1.png)
 
-(photos/photo2.png)
+![Wizualizacja wyznaczonej trasy wspinaczkowej](photos/photo2.png)
