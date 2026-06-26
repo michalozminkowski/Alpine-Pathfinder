@@ -10,20 +10,19 @@ in vec3 fragPos;
 
 out vec4 out_color;
 
-// Pseudo-random hash function
+// Pseudolosowa funkcja szumu
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
-// 2D Value Noise
+// Value Noise
 float noise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
     
-    // Smooth interpolation
+    // interpolacja
     vec2 u = f * f * (3.0 - 2.0 * f);
     
-    // Four corners
     float a = hash(i);
     float b = hash(i + vec2(1.0, 0.0));
     float c = hash(i + vec2(0.0, 1.0));
@@ -32,7 +31,7 @@ float noise(vec2 p) {
     return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 
-// Fractal Brownian Motion for more natural, detailed noise
+// Fractal Brownian Motion dla bardziej naturalnego, szczegółowego szumu
 float fbm(vec2 p) {
     float value = 0.0;
     float amplitude = 0.5;
@@ -45,11 +44,11 @@ float fbm(vec2 p) {
     return value;
 }
 
-// Derivative based Normal Mapping (No precomputed tangents needed)
+// Normal Mapping oparte na pochodnych
 vec3 perturbNormal(vec3 baseNormal, vec3 p, vec2 uv) {
     vec3 tangentNormal = texture(normalSampler, uv).xyz * 2.0 - 1.0;
     
-    // We compute the TBN matrix on the fly using screen-space derivatives
+    // Obliczamy macierz TBN w locie za pomocą pochodnych przestrzeni ekranu
     vec3 q0 = dFdx(p);
     vec3 q1 = dFdy(p);
     vec2 st0 = dFdx(uv);
@@ -79,43 +78,38 @@ vec3 perturbNormal(vec3 baseNormal, vec3 p, vec2 uv) {
 
 void main()
 {
-    // Apply Normal Mapping
+    // Zastosowanie mapowania normalnych
     vec3 N = perturbNormal(normal, fragPos, texCoord);
     
-    // Simple directional light from top-right-front
+    // Światło kierunkowe z góry-prawej-przodu
     vec3 L = normalize(vec3(0.5, 1.0, 0.5));
     float diffuse = max(dot(N, L), 0.0);
     
-    // Ambient light (brightened to make texture details more visible)
+    // Światło otoczenia (ambient)
     vec3 ambient = vec3(0.4, 0.4, 0.4);
     
-    // Sample the base texture of the desert
+    // Próbkowanie bazowej tekstury modelu
     vec3 texColor = texture(textureSampler, texCoord).rgb;
     
-    // Combine diffuse and ambient directly with the pure texture color
-    // (Removed the procedural dirt noise here because the new texture already has detailed dirt/sand)
+    // Połączenie diffuse i ambient z kolorem tekstury
     vec3 color = texColor * (diffuse * 0.8 + 0.2) + ambient * 0.2;
     
-    // Snow calculation
-    // As snowLevel increases from 0.0 to 5.0, snow can stick to steeper and steeper slopes
-    // N.y represents the upward normal (1.0 = flat ground, 0.0 = vertical wall)
+    // Obliczanie pokrywy śnieżnej
     float minSlope = max(0.8 - (0.003 * snowLevel * snowLevel), 0.5); 
     float maxSlope = max(0.95 - (0.0015 * snowLevel * snowLevel), 0.8); 
     
-    // Activate the noise function! We use FBM noise to perturb the slope calculation.
-    // This breaks up the perfectly straight snow lines and makes them look organic.
+    // Funkcja szumu
     float noiseVal = fbm(texCoord * 150.0); 
-    float perturbedNy = N.y + (noiseVal - 0.5) * 0.2; // Add random jitter to the surface angle
+    float perturbedNy = N.y + (noiseVal - 0.5) * 0.2; // Dodanie losowego przesunięcia (jitter) do kąta powierzchni
     
     float slopeFactor = smoothstep(minSlope, maxSlope, perturbedNy);
     float snowCoverage = clamp(slopeFactor * snowLevel, 0.0, 1.0);
     
-    // We also use a bit of high-frequency noise to make the snow sparkle slightly, 
-    // avoiding a perfectly flat plastic look.
+    // Szum o wysokiej częstotliwości, aby śnieg lekko błyszczał.
     float snowSparkle = fbm(texCoord * 500.0) * 0.1;
     vec3 snowColor = vec3(0.9, 0.95, 1.0) * (diffuse * 0.85 + 0.15 + snowSparkle) + ambient * 0.2;
     
-    // Mix the original rock color with the snow color
+    // Mieszanie koloru skały z kolorem śniegu
     color = mix(color, snowColor, snowCoverage);
     
     out_color = vec4(color, 1.0);

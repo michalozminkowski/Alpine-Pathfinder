@@ -1,33 +1,34 @@
-# Projekt - Grafika Komputerowa
+# Projekt: Grafika Komputerowa - Symulacja 3D
 
-## Odplanie
+Projekt w technologii OpenGL renderujący model 3D szczytu górskiego z obsługą proceduralnego śniegu, oświetlenia oraz wyznaczaniem ścieżek.
 
-```bash
-cd build && make && ./grafika_app
-```
+## Główne Funkcjonalności
 
+*   **Proceduralny Śnieg:** Generowany dynamicznie we fragment shaderze (Value Noise, FBM). Intensywność zależna od kąta nachylenia zbocza i zmiennej `snowLevel`.
+*   **Pathfinding (A*):** Algorytm wyznaczający najkrótszą trasę na szczyt. Unika terenów stromych oraz obszarów pokrytych dużą ilością śniegu. Rzutuje siatkę 3D na mapę 2D (Height Grid).
+*   **Normal Mapping:** Obliczany z użyciem pochodnych ekranowych (`dFdx`, `dFdy`). Symuluje wypukłości i chropowatość bez dodatkowej geometrii.
+*   **Oświetlenie:** Model kierunkowy (Diffuse) i otoczenia (Ambient).
+*   **Kamera Free-Fly:** Sterowana klawiaturą, oparta na kątach Eulera. Blokada osi Pitch na 89 stopniach zapobiega zjawisku Gimbal Lock.
 
-## Biblioteki 
+## Sterowanie
+
+*   **W / S / A / D** - Ruch poziomy.
+*   **Q / E** - Lot pionowy (oś Y).
+*   **Strzałki** - Obrót kamery (Pitch i Yaw).
+*   **Podwójne kliknięcie (W/S/A/D/Q/E w 0.4s)** - Tryb "Sprint", x5 prędkości.
+*   **Interfejs (ImGui)** - Zmiana zmiennej śniegu (`snowLevel`) i punktu startowego dla trasy.
+
+## Wymagania (macOS)
+
 ```bash
 brew install glfw glew glm
 ```
 
-## Kompilacja
+## Kompilacja i Uruchomienie
 
-1. Utwórz folder budowania:
-   ```bash
-   mkdir build && cd build
-   ```
-2. Wygeneruj pliki Makefile za pomocą CMake:
-   ```bash
-   cmake ..
-   ```
-3. Zbuduj projekt:
-   ```bash
-   make
-   ```
-4. Uruchom aplikację:
-   ```bash
-   ./grafika_app
-   ```
-
+```bash
+mkdir build && cd build
+cmake ..
+make
+./grafika_app
+```

@@ -9,7 +9,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include "Camera.h"
 #include "Render_Utils.h"
 #include "Shader_Loader.h"
 #include "Snow.h"
@@ -79,15 +78,18 @@ void processInput(GLFWwindow *window) {
   static float lastKeyPressTime = 0.0f;
   static bool fastMode = false;
 
-  int keys[] = { GLFW_KEY_W, GLFW_KEY_A, GLFW_KEY_S, GLFW_KEY_D, GLFW_KEY_Q, GLFW_KEY_E };
+  int keys[] = {GLFW_KEY_W, GLFW_KEY_A, GLFW_KEY_S,
+                GLFW_KEY_D, GLFW_KEY_Q, GLFW_KEY_E};
   static bool wasPressed[6] = {false};
   bool anyJustPressed = false;
   bool anyPressed = false;
 
-  for(int i = 0; i < 6; i++) {
+  for (int i = 0; i < 6; i++) {
     bool isPressed = glfwGetKey(window, keys[i]) == GLFW_PRESS;
-    if(isPressed && !wasPressed[i]) anyJustPressed = true;
-    if(isPressed) anyPressed = true;
+    if (isPressed && !wasPressed[i])
+      anyJustPressed = true;
+    if (isPressed)
+      anyPressed = true;
     wasPressed[i] = isPressed;
   }
 
@@ -98,7 +100,7 @@ void processInput(GLFWwindow *window) {
     }
     lastKeyPressTime = currentTime;
   }
-  
+
   if (!anyPressed) {
     fastMode = false;
   }
@@ -232,16 +234,22 @@ void init(GLFWwindow *window) {
   glBindTexture(GL_TEXTURE_2D, textureNormalMap);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  unsigned char *normalData = stbi_load(normalPath.c_str(), &width, &height, &nrChannels, 0);
+  unsigned char *normalData =
+      stbi_load(normalPath.c_str(), &width, &height, &nrChannels, 0);
   if (normalData) {
     GLenum format = GL_RGB;
-    if (nrChannels == 1) format = GL_RED;
-    else if (nrChannels == 3) format = GL_RGB;
-    else if (nrChannels == 4) format = GL_RGBA;
-    
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, normalData);
+    if (nrChannels == 1)
+      format = GL_RED;
+    else if (nrChannels == 3)
+      format = GL_RGB;
+    else if (nrChannels == 4)
+      format = GL_RGBA;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
+                 GL_UNSIGNED_BYTE, normalData);
     glGenerateMipmap(GL_TEXTURE_2D);
   } else {
     std::cout << "Failed to load normal map" << std::endl;
@@ -286,15 +294,16 @@ void renderScene(GLFWwindow *window) {
   }
 
   if (pathfinder) {
-    const auto& paths = pathfinder->getPaths();
+    const auto &paths = pathfinder->getPaths();
     if (!paths.empty()) {
-        ImGui::Separator();
-        ImGui::Text("Generated Routes Info:");
-        for (size_t i = 0; i < paths.size(); ++i) {
-            const auto& p = paths[i];
-            ImVec4 col(p.color.r, p.color.g, p.color.b, p.color.a);
-            ImGui::TextColored(col, "Route %zu: %.2f km, %.0f m gain", i + 1, p.distanceKm, p.elevationGainM);
-        }
+      ImGui::Separator();
+      ImGui::Text("Generated Routes Info:");
+      for (size_t i = 0; i < paths.size(); ++i) {
+        const auto &p = paths[i];
+        ImVec4 col(p.color.r, p.color.g, p.color.b, p.color.a);
+        ImGui::TextColored(col, "Route %zu: %.2f km, %.0f m gain", i + 1,
+                           p.distanceKm, p.elevationGainM);
+      }
     }
   }
 

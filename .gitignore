@@ -4,6 +4,7 @@ build-*/
 bin/
 lib/
 out/
+imgui.ini
 
 # CMake
 CMakeCache.txt

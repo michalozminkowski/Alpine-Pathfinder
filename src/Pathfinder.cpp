@@ -116,8 +116,7 @@ std::vector<glm::vec3> Pathfinder::findPathAStar(int startIdx, int targetIdx,
       std::vector<glm::vec3> path;
       int curr = current;
       while (curr != -1) {
-        path.push_back(getPos(curr) +
-                       glm::vec3(0, 0.005f, 0)); // very slightly above ground
+        path.push_back(getPos(curr) + glm::vec3(0, 0.005f, 0));
         curr = cameFrom[curr];
       }
       std::reverse(path.begin(), path.end());
@@ -139,19 +138,19 @@ std::vector<glm::vec3> Pathfinder::findPathAStar(int startIdx, int targetIdx,
         glm::vec3 neighborPos = getPos(neighbor);
         float dist = glm::distance(currentPos, neighborPos);
 
-        // Naismith's rule (time estimation)
         float timeCost = dist;
         float heightDiff = neighborPos.y - currentPos.y;
         if (heightDiff > 0) {
-          timeCost += heightDiff * 6.0f; // Climbing penalty
+          timeCost += heightDiff * 6.0f;
         } else {
-          timeCost += std::abs(heightDiff) * 1.5f; // Descending penalty
+          timeCost += std::abs(heightDiff) * 1.5f;
         }
 
-        // Snow penalty
         float ny = sim->heightGrid[neighbor].normal.y;
-        float minSlope = std::max(0.8f - (0.003f * snowLevel * snowLevel), 0.5f);
-        float maxSlope = std::max(0.95f - (0.0015f * snowLevel * snowLevel), 0.8f);
+        float minSlope =
+            std::max(0.8f - (0.003f * snowLevel * snowLevel), 0.5f);
+        float maxSlope =
+            std::max(0.95f - (0.0015f * snowLevel * snowLevel), 0.8f);
 
         float slopeFactor = 0.0f;
         if (ny <= minSlope)
@@ -160,19 +159,17 @@ std::vector<glm::vec3> Pathfinder::findPathAStar(int startIdx, int targetIdx,
           slopeFactor = 1.0f;
         else {
           float t = (ny - minSlope) / (maxSlope - minSlope);
-          slopeFactor = t * t * (3.0f - 2.0f * t); // smoothstep
+          slopeFactor = t * t * (3.0f - 2.0f * t);
         }
         float snowCoverage =
             std::max(0.0f, std::min(1.0f, slopeFactor * snowLevel));
-        float snowPenalty =
-            snowCoverage * 30.0f * dist; // Huge penalty for deep snow
+        float snowPenalty = snowCoverage * 30.0f * dist;
 
         float tentative_gScore = gScore[current] + timeCost + snowPenalty;
 
         if (tentative_gScore < gScore[neighbor]) {
           cameFrom[neighbor] = current;
           gScore[neighbor] = tentative_gScore;
-          // Heuristic: Euclidean distance to target (underestimate of timeCost)
           float hScore = glm::distance(neighborPos, targetPos);
           openSet.push({neighbor, tentative_gScore + hScore});
         }
@@ -193,9 +190,6 @@ void Pathfinder::generatePath(int cornerIdx, float snowLevel) {
   std::vector<glm::vec3> pathVerts =
       findPathAStar(startIdx, targetIdx, snowLevel);
 
-  // Lift the path slightly upwards physically to prevent Z-fighting,
-  // but KEEP depth testing enabled so it obeys perspective and doesn't follow
-  // the camera.
   for (auto &v : pathVerts) {
     v.y += 14.0f;
   }
@@ -222,13 +216,11 @@ void Pathfinder::generatePath(int cornerIdx, float snowLevel) {
       }
     }
 
-    // Konwersja z jednostek świata na rzeczywiste wartości (1 jednostka ~ 100
-    // metrów)
     newPath.distanceKm *= 0.1f;
     newPath.elevationGainM *= 100.0f;
 
     if (paths.size() >= 5) {
-      paths.erase(paths.begin()); // Remove oldest
+      paths.erase(paths.begin());
     }
 
     newPath.color = colors[paths.size() % 5];
@@ -276,9 +268,8 @@ void Pathfinder::render(const glm::mat4 &view, const glm::mat4 &projection) {
                      &projection[0][0]);
 
   glBindVertexArray(vao);
-  glLineWidth(4.0f); // Make the path thicker
+  glLineWidth(4.0f);
 
-  // Draw each path using its assigned color
   for (const auto &p : paths) {
     glUniform4f(glGetUniformLocation(shader, "color"), p.color.r, p.color.g,
                 p.color.b, p.color.a);

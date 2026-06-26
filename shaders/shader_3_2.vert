@@ -13,6 +13,6 @@ void main()
 {
 	normal = vertexNormal;
     texCoord = vertexTexCoord;
-    fragPos = vertexPosition; // For normal mapping
+    fragPos = vertexPosition; // Do mapowania normalnych
 	gl_Position = transformation * vec4(vertexPosition, 1.0);
 }
