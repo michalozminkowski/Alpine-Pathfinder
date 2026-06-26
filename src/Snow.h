@@ -26,6 +26,9 @@ public:
   // 1. Generate 2D Height Grid from obj::Model
   void initGridFromModel(const obj::Model &model, const glm::mat4 &modelMatrix);
 
+  // 1b. Initialize snowflake particles after grid generation
+  void initParticles(int numParticles);
+
   // 2. Initialize OpenGL buffers (GL_DYNAMIC_DRAW)
   void initRendering(GLuint shaderProgram);
 
@@ -53,7 +56,6 @@ public:
 public:
   int activeParticleCount = 20000;
 
-private:
   // Physics parameters
   float gravity = 0.8f;
   float windStrength = 0.8f;

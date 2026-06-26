@@ -2,6 +2,7 @@
 #include <iostream>
 #include <random>
 #include <algorithm>
+#include <glm/gtc/matrix_transform.hpp>
 
 SnowSimulation::SnowSimulation(int numParticles) {
     particles.resize(numParticles);
@@ -18,6 +19,19 @@ SnowSimulation::SnowSimulation(int numParticles) {
 SnowSimulation::~SnowSimulation() {
     if (vao != 0) glDeleteVertexArrays(1, &vao);
     if (vbo != 0) glDeleteBuffers(1, &vbo);
+}
+
+void SnowSimulation::initParticles(int numParticles) {
+    particles.resize(numParticles);
+    renderData.resize(numParticles);
+    activeParticleCount = numParticles;
+    
+    // Initial spawn
+    for (auto& p : particles) {
+        respawn(p);
+        p.life = ((float)rand() / RAND_MAX) * 10.0f; // Random initial life
+        p.position.y -= ((float)rand() / RAND_MAX) * 10.0f; // distribute initially
+    }
 }
 
 void SnowSimulation::respawn(Snowflake& p) {
@@ -152,28 +166,16 @@ void SnowSimulation::update(float dt, float time) {
         
         GridCell cell = getMountainData(p.position.x, p.position.z);
         
-        // If the particle is already on the ground, freeze it completely
-        if (p.position.y <= cell.height + 0.05f) {
-            p.position.y = cell.height + 0.02f;
-            p.velocity = glm::vec3(0.0f);
-            p.life -= dt * 2.0f; // Melt faster on ground
-        } else {
-            // Apply physics if in the air
-            p.velocity.y -= gravity * dt;
-            p.velocity.x += sin(time * 0.5f + p.position.y) * windStrength * dt;
-            p.velocity.z += cos(time * 0.8f + p.position.x) * windStrength * dt;
+        // Apply physics
+        p.velocity.y -= gravity * dt;
+        p.velocity.x += sin(time * 0.5f + p.position.y) * windStrength * dt;
+        p.velocity.z += cos(time * 0.8f + p.position.x) * windStrength * dt;
 
-            p.position += p.velocity * dt;
-            p.life -= dt;
-            
-            // Check collision after moving
-            if (p.position.y <= cell.height) {
-                p.position.y = cell.height + 0.02f;
-                p.velocity = glm::vec3(0.0f);
-            }
-        }
+        p.position += p.velocity * dt;
+        p.life -= dt;
 
-        if (p.life <= 0.0f || p.position.y < -5.0f) {
+        // Respawn if lifetime expires, or it hits the mountain terrain, or falls below base floor
+        if (p.life <= 0.0f || p.position.y <= cell.height || p.position.y < -25.0f) {
             respawn(p);
         }
     }
@@ -199,6 +201,7 @@ void SnowSimulation::render(const glm::mat4& view, const glm::mat4& projection) 
     glUseProgram(shader);
     
     glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 14.0f, 0.0f));
     glUniformMatrix4fv(glGetUniformLocation(shader, "model"), 1, GL_FALSE, &model[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shader, "view"), 1, GL_FALSE, &view[0][0]);
     glUniformMatrix4fv(glGetUniformLocation(shader, "projection"), 1, GL_FALSE, &projection[0][0]);
